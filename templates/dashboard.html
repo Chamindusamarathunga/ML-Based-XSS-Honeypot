@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Honeypot Intelligence Center - Dark Edition</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #0f172a;
+            --bg-card: rgba(30, 41, 59, 0.7);
+            --border-color: rgba(51, 65, 85, 0.5);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-primary: #38bdf8;
+            --accent-gradient: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: var(--bg-deep);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.05) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(129, 140, 248, 0.05) 0px, transparent 50%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 2rem;
+            line-height: 1.5;
+        }
+
+        .dashboard-container { max-width: 1440px; margin: 0 auto; }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header-brand h1 { 
+            font-size: 1.75rem; 
+            font-weight: 700; 
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.25rem;
+        }
+        .header-brand p { color: var(--text-secondary); font-size: 0.875rem; letter-spacing: 0.025em; }
+
+        .header-actions { display: flex; gap: 1rem; align-items: center; }
+        .btn {
+            padding: 0.625rem 1.25rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            border: 1px solid transparent;
+        }
+        .btn-logout { background: transparent; border-color: rgba(239, 68, 68, 0.3); color: var(--danger); }
+        .btn-logout:hover { background: rgba(239, 68, 68, 0.1); border-color: var(--danger); }
+        .btn-refresh { background: var(--accent-gradient); color: white; border: none; }
+        .btn-refresh:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        .stats-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); 
+            gap: 1.5rem; 
+            margin-bottom: 2.5rem;
+        }
+        .stat-card { 
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            border-radius: 16px;
+            transition: transform 0.2s;
+        }
+        .stat-card:hover { transform: translateY(-4px); border-color: var(--accent-primary); }
+        .stat-card h3 { color: var(--text-secondary); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem; }
+        .stat-value { font-size: 2.25rem; font-weight: 700; color: var(--text-primary); }
+        .stat-change { font-size: 0.875rem; margin-top: 0.5rem; display: flex; align-items: center; gap: 0.25rem; }
+        .stat-change.up { color: var(--success); }
+
+        .main-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; margin-bottom: 2.5rem; }
+        .visual-panel { display: flex; flex-direction: column; gap: 2rem; }
+        .panel { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 2rem; backdrop-filter: blur(12px); }
+        .panel h2 { font-size: 1.25rem; margin-bottom: 1.5rem; font-weight: 600; display: flex; align-items: center; gap: 0.75rem; }
+
+        .chart-container { position: relative; height: 300px; }
+
+        .tabs { display: flex; gap: 0.5rem; background: rgba(15, 23, 42, 0.5); padding: 0.4rem; border-radius: 12px; margin-bottom: 2rem; width: fit-content; }
+        .tab-btn { 
+            padding: 0.5rem 1.25rem; 
+            border-radius: 10px; 
+            font-size: 0.875rem; 
+            font-weight: 600; 
+            color: var(--text-secondary); 
+            background: transparent; 
+            border: none; 
+            cursor: pointer; 
+            transition: all 0.2s; 
+        }
+        .tab-btn.active { background: var(--bg-card); color: var(--accent-primary); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border: 1px solid var(--border-color); }
+
+        .log-entry { 
+            background: rgba(30, 41, 59, 0.4); 
+            border: 1px solid var(--border-color); 
+            border-radius: 16px; 
+            padding: 1.5rem; 
+            margin-bottom: 1.25rem; 
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        .log-entry:hover { background: rgba(30, 41, 59, 0.6); border-color: rgba(56, 189, 248, 0.3); }
+        .log-entry::before { 
+            content: ''; 
+            position: absolute; 
+            left: 0; top: 0; bottom: 0; width: 4px; 
+            background: var(--accent-gradient); 
+        }
+        .log-entry.high-risk::before { background: var(--danger); }
+
+        .log-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.25rem; }
+        .badge { padding: 0.35rem 0.85rem; border-radius: 20px; font-size: 0.675rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.025em; }
+        .badge-info { background: rgba(56, 189, 248, 0.1); color: var(--accent-primary); border: 1px solid rgba(56, 189, 248, 0.2); }
+        .badge-danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.2); }
+        .badge-warning { background: rgba(245, 158, 11, 0.1); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.2); }
+
+        .payload-display { 
+            background: #020617; 
+            color: #38bdf8; 
+            padding: 1.25rem; 
+            border-radius: 12px; 
+            font-family: 'JetBrains Mono', 'Courier New', monospace; 
+            font-size: 0.875rem; 
+            margin: 1rem 0; 
+            border: 1px solid rgba(56, 189, 248, 0.1);
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .intel-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1.25rem; margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border-color); }
+        .intel-item span { display: block; font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.25rem; text-transform: uppercase; font-weight: 600; }
+        .intel-item strong { display: block; font-size: 0.9rem; color: var(--text-primary); }
+
+        .spinner { 
+            width: 48px; height: 48px; border: 4px solid var(--border-color); border-bottom-color: var(--accent-primary); border-radius: 50%; display: inline-block; 
+            animation: rotation 1s linear infinite; margin: 3rem auto; 
+        }
+        @keyframes rotation { 0% { transform: rotate(0deg) } 100% { transform: rotate(360deg) } }
+
+        /* --- Detection Engine Badges --- */
+        .badge-ml    { background: rgba(167, 139, 250, 0.15); color: #a78bfa; border: 1px solid rgba(167, 139, 250, 0.35); }
+        .badge-regex { background: rgba(251, 146, 60, 0.15);  color: #fb923c; border: 1px solid rgba(251, 146, 60, 0.35); }
+        .badge-both  { background: rgba(52, 211, 153, 0.15);  color: #34d399; border: 1px solid rgba(52, 211, 153, 0.35); }
+
+        /* --- ML Confidence Bar --- */
+        .detection-engine-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-top: 0.75rem;
+            flex-wrap: wrap;
+        }
+        .confidence-bar-wrap {
+            flex: 1;
+            min-width: 120px;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 999px;
+            height: 8px;
+            overflow: hidden;
+            border: 1px solid rgba(51, 65, 85, 0.5);
+        }
+        .confidence-bar-fill {
+            height: 100%;
+            border-radius: 999px;
+            transition: width 0.6s ease;
+        }
+        .confidence-label {
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+        .engine-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 1024px) { .main-layout { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <header>
+            <div class="header-brand">
+                <h1>Honeypot Intelligence</h1>
+                <p>Command Center & Attack Monitoring</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-refresh" onclick="refreshData()">🔄 Pulse Refresh</button>
+                <button class="btn btn-logout" onclick="clearLogs()" style="border-color: rgba(239, 68, 68, 0.4);">🗑️ Clear Data</button>
+                <a href="/logout" class="btn btn-logout">Secure Logout</a>
+            </div>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Vulnerabilities Probed</h3>
+                <div class="stat-value" id="statTotalAttacks">0</div>
+                <div class="stat-change" id="recentTimestamp">...</div>
+            </div>
+            <div class="stat-card">
+                <h3>Reflected Traps</h3>
+                <div class="stat-value" id="statReflected">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Stored Payloads</h3>
+                <div class="stat-value" id="statStored">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Unique Threat Actors</h3>
+                <div class="stat-value" id="statIPs">0</div>
+            </div>
+        </div>
+
+        <div class="main-layout">
+            <div class="visual-panel">
+                <div class="panel">
+                    <h2>📈 Infiltration Velocity</h2>
+                    <div class="chart-container">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2>📡 Real-time Activity Logs</h2>
+                    <div class="tabs">
+                        <button class="tab-btn active" id="tabAttacks" onclick="setTab('attacks')">Attack Stream</button>
+                        <button class="tab-btn" id="tabSearches" onclick="setTab('searches')">Probe Log</button>
+                    </div>
+                    <div id="logsContainer">
+                        <div style="text-align:center"><span class="spinner"></span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="side-panel">
+                <div class="panel">
+                    <h2>🌍 Origin Attribution</h2>
+                    <div class="chart-container" style="height: 250px;">
+                        <canvas id="geoChart"></canvas>
+                    </div>
+                    <div id="geoList" style="margin-top: 1.5rem; font-size: 0.875rem;"></div>
+                </div>
+                
+                <div class="panel" style="margin-top: 2rem;">
+                    <h2>🤖 Attribution Split</h2>
+                    <div class="chart-container" style="height: 250px;">
+                        <canvas id="botChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let trendChart, geoChart, botChart;
+        let activeTab = 'attacks';
+
+        function initCharts() {
+            const commonOptions = {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { 
+                    y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' } },
+                    x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+                }
+            };
+
+            trendChart = new Chart(document.getElementById('trendChart'), {
+                type: 'line',
+                data: { labels: [], datasets: [{ 
+                    label: 'Threat Intensity',
+                    data: [], 
+                    borderColor: '#38bdf8', 
+                    borderWidth: 3, 
+                    fill: true, 
+                    backgroundColor: 'rgba(56, 189, 248, 0.1)', 
+                    tension: 0.4, 
+                    pointRadius: 6, 
+                    pointHoverRadius: 8, 
+                    pointBackgroundColor: '#38bdf8',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
+                }] },
+                options: commonOptions
+            });
+
+            geoChart = new Chart(document.getElementById('geoChart'), {
+                type: 'doughnut',
+                data: { labels: [], datasets: [{ data: [], backgroundColor: ['#38bdf8', '#818cf8', '#c084fc', '#e879f9', '#fb7185'], borderWidth: 0, hoverOffset: 10 }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false } } }
+            });
+
+            botChart = new Chart(document.getElementById('botChart'), {
+                type: 'bar',
+                data: { labels: [], datasets: [{ data: [], backgroundColor: 'rgba(129, 140, 248, 0.6)', borderRadius: 8 }] },
+                options: commonOptions
+            });
+        }
+
+        async function refreshData() {
+            try {
+                const resStats = await fetch('/api/stats');
+                if (resStats.status === 401) { window.location.href = '/login'; return; }
+                const stats = await resStats.json();
+                
+                document.getElementById('statTotalAttacks').textContent = stats.total_attacks;
+                document.getElementById('statReflected').textContent = stats.reflected_xss_attempts;
+                document.getElementById('statStored').textContent = stats.stored_xss_attempts;
+                document.getElementById('statIPs').textContent = stats.unique_ips;
+                if (stats.most_recent_attack) {
+                    document.getElementById('recentTimestamp').innerHTML = `Last: <span style="color:white">${new Date(stats.most_recent_attack.timestamp).toLocaleTimeString()}</span>`;
+                }
+
+                // Always fetch attacks to keep visuals updated
+                const resAttacks = await fetch('/api/get-attack-logs');
+                const attackData = await resAttacks.json();
+                updateVisuals(attackData.attacks);
+
+                if (activeTab === 'attacks') {
+                    renderAttacks(attackData.attacks);
+                } else {
+                    const resSearches = await fetch('/api/get-search-logs');
+                    const searchData = await resSearches.json();
+                    renderSearches(searchData.searches);
+                }
+            } catch (e) { console.error("Refresh Error:", e); }
+        }
+
+        async function clearLogs() {
+            if (!confirm("⚠️ PERMANENT ACTION: Are you sure you want to delete ALL logs and probe records? This cannot be undone.")) return;
+            try {
+                const res = await fetch('/api/clear-logs', { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    alert(data.message);
+                    refreshData();
+                } else {
+                    alert("Error: " + data.message);
+                }
+            } catch (e) {
+                console.error("Clear Error:", e);
+                alert("An error occurred while clearing logs.");
+            }
+        }
+
+        function getDetectionBadge(detectionResults) {
+            const method = (detectionResults && detectionResults.detection_method) || 'regex';
+            const confidence = (detectionResults && detectionResults.ml_confidence) || 0;
+            const confPct = Math.round(confidence * 100);
+            const mlAvailable = detectionResults && detectionResults.ml_available;
+
+            let badgeClass, badgeLabel, barColor;
+            if (method === 'regex+ml' || method === 'ml+regex') {
+                badgeClass = 'badge-both';  badgeLabel = '🧬 Regex + ML';
+                barColor = 'linear-gradient(90deg, #34d399, #38bdf8)';
+            } else if (method === 'ml_only') {
+                badgeClass = 'badge-ml';    badgeLabel = '🤖 ML Model';
+                barColor = 'linear-gradient(90deg, #a78bfa, #818cf8)';
+            } else {
+                badgeClass = 'badge-regex'; badgeLabel = '📋 Signature';
+                barColor = 'linear-gradient(90deg, #fb923c, #f59e0b)';
+            }
+
+            const confBar = mlAvailable ? `
+                <div class="confidence-bar-wrap" title="ML XSS Probability: ${confPct}%">
+                    <div class="confidence-bar-fill" style="width:${confPct}%; background:${barColor};"></div>
+                </div>
+                <span class="confidence-label">ML: ${confPct}%</span>
+            ` : '<span class="confidence-label" style="color:#475569">ML not loaded</span>';
+
+            return `<span class="engine-label">Detected by</span>
+                    <span class="badge ${badgeClass}">${badgeLabel}</span>
+                    ${confBar}`;
+        }
+
+        function renderAttacks(attacks) {
+            const container = document.getElementById('logsContainer');
+            if (attacks.length === 0) { container.innerHTML = '<div style="text-align:center; color:#64748b; padding:2rem">No alerts in transmission.</div>'; return; }
+            
+            container.innerHTML = attacks.map(log => `
+                <div class="log-entry ${log.attack_type !== 'reflected_xss' ? 'high-risk' : ''}">
+                    <div class="log-head">
+                        <div>
+                            <span class="badge ${getBadgeClass(log.attack_type)}">${log.attack_type.replace('_', ' ')}</span>
+                            <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 0.5rem;">Transmission ID: ${log.payload_hash.substring(0, 12)}</div>
+                        </div>
+                        <div style="text-align: right">
+                            <div style="font-weight: 600; font-size: 0.9rem">${log.client_info.ip_address}</div>
+                            <div style="font-size: 0.75rem; color: #64748b;">${new Date(log.client_info.timestamp).toLocaleString()}</div>
+                        </div>
+                    </div>
+                    <div class="payload-display">${escapeHtml(log.payload)}</div>
+                    <div class="detection-engine-row">
+                        ${getDetectionBadge(log.detection_results)}
+                    </div>
+                    <div class="intel-grid">
+                        <div class="intel-item"><span>Origin</span><strong>${log.intelligence.geoip.city || 'Unknown'}, ${log.intelligence.geoip.country || 'N/A'}</strong></div>
+                        <div class="intel-item"><span>ISP</span><strong>${log.intelligence.geoip.isp || 'Hidden'}</strong></div>
+                        <div class="intel-item"><span>Attribution</span><strong>${log.intelligence.bot_identity}</strong></div>
+                        <div class="intel-item"><span>Method</span><strong>${log.client_info.method}</strong></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderSearches(searches) {
+            const container = document.getElementById('logsContainer');
+            container.innerHTML = searches.map(s => `
+                <div class="log-entry" style="padding: 1rem 1.5rem">
+                    <div style="display:flex; justify-content:space-between; align-items:center">
+                        <div style="display:flex; align-items:center; gap:1rem">
+                            <span class="badge ${s.detection_results.is_suspicious ? 'badge-danger' : 'badge-info'}">${s.detection_results.is_suspicious ? 'Suspect' : 'Neutral'}</span>
+                            <div style="font-weight: 500">${escapeHtml(s.query)}</div>
+                        </div>
+                        <div style="text-align:right">
+                            <div style="font-size:0.8rem">${s.client_info.ip_address}</div>
+                            <div style="font-size:0.7rem; color:#64748b">${new Date(s.client_info.timestamp).toLocaleTimeString()}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateVisuals(attacks) {
+            // Trend - Show last 12 hours
+            const trendData = {};
+            const now = new Date();
+            for (let i = 11; i >= 0; i--) {
+                const d = new Date(now.getTime() - i * 60 * 60 * 1000);
+                const label = d.getHours() + ":00";
+                trendData[label] = 0;
+            }
+
+            attacks.forEach(a => {
+                const hour = new Date(a.client_info.timestamp).getHours() + ":00";
+                if (trendData.hasOwnProperty(hour)) {
+                    trendData[hour]++;
+                }
+            });
+
+            trendChart.data.labels = Object.keys(trendData);
+            trendChart.data.datasets[0].data = Object.values(trendData);
+            trendChart.update();
+
+            // Geo
+            const geoData = {};
+            attacks.forEach(a => {
+                const c = a.intelligence.geoip.country || 'Unknown';
+                geoData[c] = (geoData[c] || 0) + 1;
+            });
+            geoChart.data.labels = Object.keys(geoData);
+            geoChart.data.datasets[0].data = Object.values(geoData);
+            geoChart.update();
+
+            // Bot
+            const botData = {};
+            attacks.forEach(a => {
+                const b = a.intelligence.bot_identity || 'Manual';
+                botData[b] = (botData[b] || 0) + 1;
+            });
+            botChart.data.labels = Object.keys(botData);
+            botChart.data.datasets[0].data = Object.values(botData);
+            botChart.update();
+        }
+
+        function getBadgeClass(type) {
+            if (type === 'reflected_xss') return 'badge-info';
+            if (type === 'stored_xss') return 'badge-warning';
+            return 'badge-danger';
+        }
+
+        function setTab(tab) {
+            activeTab = tab;
+            document.getElementById('tabAttacks').classList.toggle('active', tab === 'attacks');
+            document.getElementById('tabSearches').classList.toggle('active', tab === 'searches');
+            refreshData();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initCharts();
+            refreshData();
+            setInterval(refreshData, 5000); // Live refresh every 5s
+        });
+    </script>
+</body>
+</html>
