@@ -455,6 +455,27 @@ The system successfully:
 
 ---
 
+## 📸 Screenshots
+
+### Home Page
+![Home Page](docs/images/home.png)
+
+### Reflected XSS Interface
+![Reflected XSS](docs/images/reflected-xss.png)
+
+### Stored XSS Interface
+![Stored XSS](docs/images/stored-xss.png)
+
+### Administrator Login
+![Admin Login](docs/images/admin-login.png)
+
+### Administrator Dashboard
+![Dashboard](docs/images/dashboard.png)
+
+### Attack Details
+![Attack Details](docs/images/attack-details.png)
+
+
 ## 📁 Suggested Repository Structure
 
 ```text
