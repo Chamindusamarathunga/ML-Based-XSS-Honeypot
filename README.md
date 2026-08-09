@@ -455,27 +455,6 @@ The system successfully:
 
 ---
 
-## 📸 Screenshots
-
-### Home Page
-![Home Page](images/home.png)
-
-### Reflected XSS Interface
-![Reflected XSS](images/reflected-xss.png)
-
-### Stored XSS Interface
-![Stored XSS](images/stored-xss.png)
-
-### Administrator Login
-![Admin Login](images/admin-login.png)
-
-### Administrator Dashboard
-![Dashboard](images/dashboard.png)
-
-### Attack Details
-![Attack Details](images/attack-details.png)
-
-
 ## 📁 Suggested Repository Structure
 
 ```text
@@ -511,9 +490,16 @@ ML-Based-XSS-Honeypot/
 ├── database/
 │   └── honeypot.db
 │
+├── images/
+│   ├── home.png
+│   ├── reflected-xss.png
+│   ├── stored-xss.png
+│   ├── admin-login.png
+│   ├── dashboard.png
+│   └── attack-details.png
+│
 ├── docs/
 │   ├── architecture/
-│   ├── screenshots/
 │   └── research/
 │
 └── tests/
@@ -526,20 +512,23 @@ ML-Based-XSS-Honeypot/
 
 ## 📸 Screenshots
 
-Add real screenshots to `docs/screenshots/` and reference them here:
+### 🏠 Home Page
+![Home Page](images/home.png)
 
-```markdown
-![Administrator Dashboard](docs/screenshots/dashboard.png)
-```
+### 🔍 Reflected XSS Interface
+![Reflected XSS](images/reflected-xss.png)
 
-| Page | Path |
-|---|---|
-| Home Page | `docs/screenshots/home.png` |
-| Reflected XSS Interface | `docs/screenshots/reflected-xss.png` |
-| Stored XSS Interface | `docs/screenshots/stored-xss.png` |
-| Administrator Login | `docs/screenshots/admin-login.png` |
-| Administrator Dashboard | `docs/screenshots/dashboard.png` |
-| Attack Details | `docs/screenshots/attack-details.png` |
+### 💬 Stored XSS Interface
+![Stored XSS](images/stored-xss.png)
+
+### 🔒 Administrator Login
+![Admin Login](images/admin-login.png)
+
+### 📊 Administrator Dashboard
+![Dashboard](images/dashboard.png)
+
+### 🧾 Attack Details
+![Attack Details](images/attack-details.png)
 
 ---
 
