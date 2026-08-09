@@ -33,7 +33,7 @@
 
 The **ML-Based XSS Honeypot** is a web-based cybersecurity research system designed to detect, capture, monitor, and analyze **Reflected** and **Stored Cross-Site Scripting (XSS)** attacks within a controlled, isolated environment.
 
-It combines **Machine Learning classification** with traditional **Keyword/Regex detection** to form a hybrid threat detection engine — rather than relying on a single method, submitted payloads are analyzed through multiple detection layers and logged for further security research.
+It combines **Machine Learning classification** with traditional **Keyword/Regex detection** to form a hybrid threat detection engine - rather than relying on a single method, submitted payloads are analyzed through multiple detection layers and logged for further security research.
 
 This project was developed as a **Computer Researching Project** for the **Pearson BTEC HND in Computing** programme at **CINEC Campus**.
 
